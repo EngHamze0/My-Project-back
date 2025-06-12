@@ -6,9 +6,18 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use App\Services\ProductImageService;
+use Illuminate\Support\Facades\DB;
 
 class ProductService
 {
+    protected $productImageService;
+    
+    public function __construct(ProductImageService $productImageService)
+    {
+        $this->productImageService = $productImageService;
+    }
+    
     /**
      * Get all products or filter by type
      */
@@ -62,18 +71,46 @@ class ProductService
      */
     public function createProduct($request)
     {
-        // Create the product with validated data
-        $product = Product::create([
-            'name' => $request->name,
-            'description' => $request->description,
-            'price' => $request->price,
-            'quantity' => $request->quantity,
-            'type' => $request->type,
-            'specifications' => $request->specifications,
-            'status' => $request->status ?? 'active',
-        ]);
-        
-        return $product;
+        DB::beginTransaction();
+        try {
+            // Create the product with validated data
+            $product = Product::create([
+                'name' => $request->name,
+                'description' => $request->description,
+                'price' => $request->price,
+                'quantity' => $request->quantity,
+                'type' => $request->type,
+                'specifications' => $request->specifications,
+                'status' => $request->status ?? 'active',
+            ]);
+            
+            // إذا كان هناك صور، قم بتحميلها
+            if ($request->hasFile('images')) {
+                $images = $request->file('images');
+                $primaryImageIndex = $request->input('primary_image_index', 0);
+                
+                foreach ($images as $index => $image) {
+                    // تخزين الصورة
+                    $path = $image->store('products', 'public');
+                    
+                    // تحديد ما إذا كانت هذه الصورة الرئيسية
+                    $isPrimary = ($index == $primaryImageIndex);
+                    
+                    // إنشاء سجل الصورة
+                    $product->images()->create([
+                        'image_path' => $path,
+                        'is_primary' => $isPrimary,
+                        'sort_order' => $index + 1,
+                    ]);
+                }
+            }
+            
+            DB::commit();
+            return $product->load('images');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
     
     /**
@@ -81,20 +118,53 @@ class ProductService
      */
     public function updateProduct($request, $id)
     {
-        $product = Product::findOrFail($id);
-        
-        // Update the product with validated data
-        $product->update([
-            'name' => $request->name ?? $product->name,
-            'description' => $request->description ?? $product->description,
-            'price' => $request->price ?? $product->price,
-            'quantity' => $request->quantity ?? $product->quantity,
-            'type' => $request->type ?? $product->type,
-            'specifications' => $request->specifications ?? $product->specifications,
-            'status' => $request->status ?? $product->status,
-        ]);
-        
-        return $product;
+        DB::beginTransaction();
+        try {
+            $product = Product::findOrFail($id);
+            
+            // Update the product with validated data
+            $product->update([
+                'name' => $request->name ?? $product->name,
+                'description' => $request->description ?? $product->description,
+                'price' => $request->price ?? $product->price,
+                'quantity' => $request->quantity ?? $product->quantity,
+                'type' => $request->type ?? $product->type,
+                'specifications' => $request->specifications ?? $product->specifications,
+                'status' => $request->status ?? $product->status,
+            ]);
+            
+            // إذا كان هناك صور، قم بتحميلها
+            if ($request->hasFile('images')) {
+                $images = $request->file('images');
+                $primaryImageIndex = $request->input('primary_image_index', 0);
+                
+                foreach ($images as $index => $image) {
+                    // تخزين الصورة
+                    $path = $image->store('products', 'public');
+                    
+                    // تحديد ما إذا كانت هذه الصورة الرئيسية
+                    $isPrimary = ($index == $primaryImageIndex);
+                    
+                    // إذا كانت هذه الصورة الرئيسية، قم بإلغاء تعيين الصور الرئيسية الأخرى
+                    if ($isPrimary) {
+                        $product->images()->where('is_primary', true)->update(['is_primary' => false]);
+                    }
+                    
+                    // إنشاء سجل الصورة
+                    $product->images()->create([
+                        'image_path' => $path,
+                        'is_primary' => $isPrimary,
+                        'sort_order' => $product->images()->max('sort_order') + $index + 1,
+                    ]);
+                }
+            }
+            
+            DB::commit();
+            return $product->load('images');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
     
     /**

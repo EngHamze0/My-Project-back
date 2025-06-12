@@ -226,6 +226,7 @@
 - **Method**: `POST`
 - **المصادقة**: مطلوبة
 - **الصلاحيات**: مشرف فقط
+- **نوع الطلب**: `multipart/form-data` (لدعم تحميل الصور)
 - **معلمات الطلب**:
   - `name`: اسم المنتج (مطلوب، نص، الحد الأقصى 255 حرف)
   - `description`: وصف المنتج (اختياري، نص)
@@ -234,35 +235,37 @@
   - `type`: نوع المنتج (مطلوب، واحد من: `battery`, `solar_panel`, `inverter`)
   - `specifications`: مواصفات المنتج (مطلوب، مصفوفة تختلف حسب نوع المنتج)
   - `status`: حالة المنتج (اختياري، واحد من: `active`, `inactive`، افتراضيًا `active`)
+  - `images[]`: صور المنتج (اختياري، مصفوفة من الملفات، الحد الأقصى 2MB لكل صورة)
+  - `primary_image_index`: مؤشر الصورة الرئيسية في المصفوفة (اختياري، عدد صحيح، افتراضيًا 0)
 
 #### مواصفات البطاريات المطلوبة:
-  - `capacity`: سعة البطارية (مطلوب، رقم موجب)
-  - `voltage`: الجهد (مطلوب، رقم موجب)
-  - `chemistry`: نوع الكيمياء (مطلوب، نص)
-  - `cycle_life`: عمر الدورة (اختياري، عدد صحيح موجب)
-  - `dimensions`: الأبعاد (اختياري، نص)
-  - `weight`: الوزن (اختياري، رقم موجب)
-  - `brand`: العلامة التجارية (اختياري، نص)
+  - `capacity`: سعة البطارية بالأمبير ساعة (Ah)
+  - `voltage`: الجهد بالفولت (V)
+  - `chemistry`: نوع الكيمياء (مثل Lithium-Ion، Lead-Acid، LiFePO4)
+  - `cycle_life`: عدد دورات الشحن والتفريغ (اختياري)
+  - `dimensions`: أبعاد البطارية (اختياري)
+  - `weight`: وزن البطارية بالكيلوغرام (اختياري)
+  - `brand`: العلامة التجارية (اختياري)
 
 #### مواصفات ألواح الطاقة الشمسية المطلوبة:
-  - `power`: القدرة (مطلوب، رقم موجب)
-  - `voltage`: الجهد (مطلوب، رقم موجب)
-  - `current`: التيار (مطلوب، رقم موجب)
-  - `dimensions`: الأبعاد (اختياري، نص)
-  - `weight`: الوزن (اختياري، رقم موجب)
-  - `cell_type`: نوع الخلية (اختياري، نص)
-  - `efficiency`: الكفاءة (اختياري، رقم بين 0 و 100)
-  - `brand`: العلامة التجارية (اختياري، نص)
+  - `power`: القدرة بالواط (W)
+  - `voltage`: الجهد بالفولت (V)
+  - `current`: التيار بالأمبير (A)
+  - `dimensions`: أبعاد اللوح (اختياري)
+  - `weight`: وزن اللوح بالكيلوغرام (اختياري)
+  - `cell_type`: نوع الخلية (مثل Monocrystalline، Polycrystalline، Thin-Film) (اختياري)
+  - `efficiency`: كفاءة اللوح بالنسبة المئوية (اختياري)
+  - `brand`: العلامة التجارية (اختياري)
 
 #### مواصفات الإنفيرتر المطلوبة:
-  - `power`: القدرة (مطلوب، رقم موجب)
-  - `input_voltage`: جهد الدخل (مطلوب، رقم موجب)
-  - `output_voltage`: جهد الخرج (مطلوب، رقم موجب)
+  - `power`: القدرة بالواط (W)
+  - `input_voltage`: جهد الدخل بالفولت (V)
+  - `output_voltage`: جهد الخرج بالفولت (V)
   - `efficiency`: الكفاءة (اختياري، رقم بين 0 و 100)
-  - `dimensions`: الأبعاد (اختياري، نص)
+  - `dimensions`: الأبعاد (اختياري)
   - `weight`: الوزن (اختياري، رقم موجب)
-  - `type`: النوع (اختياري، نص)
-  - `brand`: العلامة التجارية (اختياري، نص)
+  - `type`: نوع الإنفيرتر (مثل Pure Sine Wave، Modified Sine Wave، Grid-Tie) (اختياري)
+  - `brand`: العلامة التجارية (اختياري)
 
 #### استجابة ناجحة (201 Created)
 
@@ -287,6 +290,38 @@
   },
   "status": "active",
   "status_label": "نشط",
+  "primary_image": {
+    "id": 1,
+    "product_id": 3,
+    "image_path": "products/inverter_1.jpg",
+    "image_url": "http://example.com/storage/products/inverter_1.jpg",
+    "is_primary": true,
+    "sort_order": 1,
+    "created_at": "2023-06-15T14:30:00.000000Z",
+    "updated_at": "2023-06-15T14:30:00.000000Z"
+  },
+  "images": [
+    {
+      "id": 1,
+      "product_id": 3,
+      "image_path": "products/inverter_1.jpg",
+      "image_url": "http://example.com/storage/products/inverter_1.jpg",
+      "is_primary": true,
+      "sort_order": 1,
+      "created_at": "2023-06-15T14:30:00.000000Z",
+      "updated_at": "2023-06-15T14:30:00.000000Z"
+    },
+    {
+      "id": 2,
+      "product_id": 3,
+      "image_path": "products/inverter_2.jpg",
+      "image_url": "http://example.com/storage/products/inverter_2.jpg",
+      "is_primary": false,
+      "sort_order": 2,
+      "created_at": "2023-06-15T14:30:00.000000Z",
+      "updated_at": "2023-06-15T14:30:00.000000Z"
+    }
+  ],
   "created_at": "2023-06-15T14:30:00.000000Z",
   "updated_at": "2023-06-15T14:30:00.000000Z"
 }
@@ -318,10 +353,13 @@
 - **Method**: `POST`
 - **المصادقة**: مطلوبة
 - **الصلاحيات**: مشرف فقط
+- **نوع الطلب**: `multipart/form-data` (لدعم تحميل الصور)
 - **معلمات المسار**:
   - `id`: معرف المنتج (مطلوب، عدد صحيح)
 - **معلمات الطلب**:
   - نفس معلمات إنشاء المنتج، لكنها جميعًا اختيارية
+  - `images[]`: صور إضافية للمنتج (اختياري، مصفوفة من الملفات)
+  - `primary_image_index`: مؤشر الصورة الرئيسية في المصفوفة (اختياري، عدد صحيح)
 
 #### استجابة ناجحة (200 OK)
 
@@ -346,6 +384,48 @@
   },
   "status": "active",
   "status_label": "نشط",
+  "primary_image": {
+    "id": 1,
+    "product_id": 3,
+    "image_path": "products/inverter_1.jpg",
+    "image_url": "http://example.com/storage/products/inverter_1.jpg",
+    "is_primary": true,
+    "sort_order": 1,
+    "created_at": "2023-06-15T14:30:00.000000Z",
+    "updated_at": "2023-06-15T14:30:00.000000Z"
+  },
+  "images": [
+    {
+      "id": 1,
+      "product_id": 3,
+      "image_path": "products/inverter_1.jpg",
+      "image_url": "http://example.com/storage/products/inverter_1.jpg",
+      "is_primary": true,
+      "sort_order": 1,
+      "created_at": "2023-06-15T14:30:00.000000Z",
+      "updated_at": "2023-06-15T14:30:00.000000Z"
+    },
+    {
+      "id": 2,
+      "product_id": 3,
+      "image_path": "products/inverter_2.jpg",
+      "image_url": "http://example.com/storage/products/inverter_2.jpg",
+      "is_primary": false,
+      "sort_order": 2,
+      "created_at": "2023-06-15T14:30:00.000000Z",
+      "updated_at": "2023-06-15T14:30:00.000000Z"
+    },
+    {
+      "id": 3,
+      "product_id": 3,
+      "image_path": "products/inverter_3.jpg",
+      "image_url": "http://example.com/storage/products/inverter_3.jpg",
+      "is_primary": false,
+      "sort_order": 3,
+      "created_at": "2023-06-15T15:30:00.000000Z",
+      "updated_at": "2023-06-15T15:30:00.000000Z"
+    }
+  ],
   "created_at": "2023-06-15T14:30:00.000000Z",
   "updated_at": "2023-06-15T15:30:00.000000Z"
 }
@@ -561,4 +641,6 @@ class Product extends Model
 3. عند حذف منتج، يتم حذف جميع الصور المرتبطة به تلقائيًا.
 4. يمكن تصفية المنتجات حسب النوع والحالة، وترتيبها حسب أي حقل.
 5. يمكن تضمين الصور الرئيسية أو جميع الصور في استجابة API حسب الحاجة.
-6. يتم التحقق من صحة المواصفات المطلوبة لكل نوع من المنتجات عند الإنشاء أو التحديث. 
+6. يتم التحقق من صحة المواصفات المطلوبة لكل نوع من المنتجات عند الإنشاء أو التحديث.
+7. يمكن تحميل صور متعددة مع المنتج عند إنشائه باستخدام حقل `images[]` في نموذج البيانات.
+8. يمكن تحديد الصورة الرئيسية للمنتج باستخدام حقل `primary_image_index` الذي يشير إلى موقع الصورة في مصفوفة الصور المرفوعة. 

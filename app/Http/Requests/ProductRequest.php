@@ -27,6 +27,9 @@ class ProductRequest extends FormRequest
             'quantity' => 'required|integer|min:0',
             'type' => ['required', Rule::in(['battery', 'solar_panel', 'inverter'])],
             'status' => ['nullable', Rule::in(['active', 'inactive'])],
+            'images' => 'nullable|array',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'primary_image_index' => 'nullable|integer|min:0',
         ];
         
         // Add type-specific validation rules for specifications
@@ -77,6 +80,12 @@ class ProductRequest extends FormRequest
             'type.required' => 'نوع المنتج مطلوب',
             'type.in' => 'نوع المنتج غير صالح',
             'status.in' => 'حالة المنتج غير صالحة',
+            'images.array' => 'يجب أن تكون الصور عبارة عن مصفوفة',
+            'images.*.image' => 'يجب أن يكون الملف صورة',
+            'images.*.mimes' => 'يجب أن تكون الصورة من نوع: jpeg, png, jpg, gif',
+            'images.*.max' => 'يجب ألا يتجاوز حجم الصورة 2 ميجابايت',
+            'primary_image_index.integer' => 'يجب أن يكون مؤشر الصورة الرئيسية رقمًا صحيحًا',
+            'primary_image_index.min' => 'يجب أن يكون مؤشر الصورة الرئيسية أكبر من أو يساوي صفر',
             
             // Battery specifications
             'specifications.capacity.required' => 'سعة البطارية مطلوبة',
