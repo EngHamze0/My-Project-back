@@ -1,0 +1,66 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Product extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'name',
+        'description',
+        'price',
+        'quantity',
+        'type', // 'battery', 'solar_panel', 'inverter'
+        'specifications', // JSON field for specific attributes
+        'status', // 'active', 'inactive'
+    ];
+
+    protected $casts = [
+        'specifications' => 'array',
+        'price' => 'float',
+    ];
+
+    /**
+     * العلاقة مع صور المنتج
+     */
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('sort_order');
+    }
+
+    /**
+     * الحصول على الصورة الرئيسية للمنتج
+     */
+    public function primaryImage()
+    {
+        return $this->hasOne(ProductImage::class)->where('is_primary', true);
+    }
+
+    // Scope to filter by product type
+    public function scopeOfType($query, $type)
+    {
+        return $query->where('type', $type);
+    }
+
+    // Get batteries
+    public function scopeBatteries($query)
+    {
+        return $query->where('type', 'battery');
+    }
+
+    // Get solar panels
+    public function scopeSolarPanels($query)
+    {
+        return $query->where('type', 'solar_panel');
+    }
+
+    // Get inverters
+    public function scopeInverters($query)
+    {
+        return $query->where('type', 'inverter');
+    }
+} 
