@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\Coupon;
 use Illuminate\Support\Facades\DB;
 use Exception;
 
@@ -64,21 +65,33 @@ class OrderService
 
             // تحديث إجماليات الطلب
             $order->subtotal = $subtotal;
-            $order->total = $subtotal; // يمكن تطبيق الخصم هنا إذا كان هناك كوبون
+            $order->total = $subtotal;
+            $discount = 0;
 
             // تطبيق الكوبون إذا كان موجوداً
             if ($couponCode) {
-             
-                $discount = $order->subtotal * 0.07; // يمكن حساب قيمة الخصم هنا
-                $order->discount = $discount;
-                $order->total = $subtotal - $discount;
+                $coupon = Coupon::where('code', $couponCode)
+                    ->where('is_active', true)
+                    ->first();
+
+                if ($coupon && $coupon->isValid($subtotal)) {
+                    $discount = $coupon->calculateDiscount($subtotal);
+                    $order->discount = $discount;
+                    $order->total = $subtotal - $discount;
+                    
+                    // زيادة عدد مرات استخدام الكوبون
+                    $coupon->incrementUsage();
+                } else {
+                    // إذا كان الكوبون غير صالح، إزالته من الطلب
+                    $order->coupon_code = null;
+                }
             }
 
             $order->save();
 
             DB::commit();
 
-            return $order;
+            return $order->load('items.product');
         } catch (Exception $e) {
             DB::rollBack();
             throw $e;

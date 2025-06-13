@@ -25,18 +25,21 @@ class OrderController extends Controller
      */
     public function store(Request $request)
     {
-            $validated = Validator::make($request->all(),[
+        $validator = Validator::make($request->all(), [
             'products' => 'required|array',
             'products.*.product_id' => 'required|exists:products,id',
             'products.*.quantity' => 'sometimes|integer|min:1',
-            'coupon_code' => 'nullable|string'
+            'coupon_code' => 'nullable|string|exists:coupons,code'
         ]);
-        if($validated->fails()){
+
+        if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
-                'message' => $validated->errors()
+                'message' => 'بيانات غير صالحة',
+                'errors' => $validator->errors()
             ], 422);
         }
+
         try {
             $userId = auth('sanctum')->user()->id;
             $order = $this->orderService->createOrder(

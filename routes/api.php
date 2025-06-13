@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\API\CouponController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AdminUserApiController;
@@ -57,6 +58,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/favorites/{productId}', [FavoriteController::class, 'destroy']);// we don't used
     Route::post('/favorites/toggle/{productId}', [FavoriteController::class, 'toggle']);
     Route::get('/favorites/check/{productId}', [FavoriteController::class, 'check']);// we don't used
+
+    // مسارات الكوبونات للمستخدمين
+    Route::post('/coupons/validate', [App\Http\Controllers\API\CouponController::class, 'validateCoupon']);
 });
 
 // مسارات المنتجات للمشرفين
@@ -90,6 +94,12 @@ Route::middleware(['auth:sanctum', CheckAdminRole::class])->group(function () {
     Route::get('/dashboard/users', [DashboardController::class, 'usersStats']);
     Route::get('/dashboard/services', [DashboardController::class, 'servicesStats']);
     Route::get('/dashboard/subscriptions', [DashboardController::class, 'subscriptionsStats']);
+
+    // مسارات الكوبونات للمشرفين
+    Route::apiResource('/coupons', CouponController::class);
+    Route::post('/coupons/update/{id}', [CouponController::class, 'update']);//update copuon
+    Route::post('/coupons/validateCoupon', [CouponController::class, 'validateCoupon']);//update copuon
+
 });
 
 // مسارات الطلبات للمستخدمين
