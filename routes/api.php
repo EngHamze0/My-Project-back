@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\FavoriteController;
+use App\Http\Controllers\API\OrderController;
 use App\Http\Middleware\CheckAdminRole;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
@@ -89,6 +90,20 @@ Route::middleware(['auth:sanctum', CheckAdminRole::class])->group(function () {
     Route::get('/dashboard/users', [DashboardController::class, 'usersStats']);
     Route::get('/dashboard/services', [DashboardController::class, 'servicesStats']);
     Route::get('/dashboard/subscriptions', [DashboardController::class, 'subscriptionsStats']);
+});
+
+// مسارات الطلبات للمستخدمين
+Route::middleware('auth:sanctum')->prefix('orders')->group(function () {
+    Route::post('/', [OrderController::class, 'store']); // إنشاء طلب جديد
+    Route::get('/user', [OrderController::class, 'getUserOrders']); // الحصول على طلبات المستخدم
+    Route::get('/user/{orderId}', [OrderController::class, 'getUserOrder']); // الحصول على تفاصيل طلب محدد
+});
+
+// مسارات الطلبات للمشرفين
+Route::middleware(['auth:sanctum', CheckAdminRole::class])->prefix('admin/orders')->group(function () {
+    Route::get('/', [OrderController::class, 'index']); // الحصول على جميع الطلبات
+    Route::get('/{orderId}', [OrderController::class, 'show']); // الحصول على تفاصيل طلب محدد
+    Route::post('/{orderId}/status', [OrderController::class, 'updateStatus']); // تحديث حالة الطلب
 });
 
 // // مسارات صور المنتجات

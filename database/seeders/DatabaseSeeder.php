@@ -40,8 +40,8 @@ class DatabaseSeeder extends Seeder
         ]);
         
         // Seed products
-        $this->call([
-            ProductSeeder::class,
-        ]);
+        // $this->call([
+        //     ProductSeeder::class,
+        // ]);
     }
 }

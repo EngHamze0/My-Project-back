@@ -16,7 +16,7 @@ class AdminUserApiController extends Controller
     public function index()
     {
         $users = User::all();
-        return response()->json($users, Response::HTTP_OK);
+        return response()->json($users, 200);
     }
 
     public function store(Request $request)
@@ -37,14 +37,14 @@ class AdminUserApiController extends Controller
             'password' => Hash::make($validatedData['password']),
         ]);
 
-        return response()->json($user, Response::HTTP_CREATED);
+        return response()->json($user, 201);
     }
 
     
     public function show(string $id)
     {
         $user = User::findOrFail($id);
-        return response()->json($user, Response::HTTP_OK);
+        return response()->json($user, 200);
     }
 
     
@@ -81,7 +81,7 @@ class AdminUserApiController extends Controller
         $user = User::findOrFail($id);
         $user->delete();
 
-        return response()->json(null, Response::HTTP_NO_CONTENT);
+        return response()->json(null, 204);
     }
 
     public function toggleActive(string $id)
