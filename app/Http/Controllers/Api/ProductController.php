@@ -10,6 +10,7 @@ use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Validator;
+
 class ProductController extends Controller
 {
     protected $productService;
@@ -53,7 +54,7 @@ class ProductController extends Controller
         }
         try {
             $product = $this->productService->createProduct($request);
-            return response()->json( ['message' => 'Product created successfully', 'data' => new ProductResource($product)], status: 201);
+            return response()->json(['message' => 'تم إنشاء المنتج بنجاح', 'data' => new ProductResource($product)], 201);
         } catch (ValidationException $e) {
             return response()->json(['errors' => $e->errors()], 422);
         } catch (\Exception $e) {
@@ -77,11 +78,27 @@ class ProductController extends Controller
     /**
      * Update the specified product in storage.
      */
-    public function update(ProductRequest $request, $id)
+    public function update(Request $request, $id)
     {
+        $validator = Validator::make($request->all(), [
+            'name' => 'sometimes|required|string|max:255',
+            'description' => 'sometimes|nullable|string',
+            'price' => 'sometimes|required|numeric|min:0',
+            'quantity' => 'sometimes|required|integer|min:0',
+            'type' => 'sometimes|required',
+            'status' => 'sometimes|nullable',
+            'images' => 'sometimes|nullable|array',
+            'images.*' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:10000',
+            'primary_image_index' => 'sometimes|nullable|integer|min:0',
+            'images_to_delete' => 'sometimes|nullable|array',
+            'images_to_delete.*' => 'sometimes|integer',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
         try {
             $product = $this->productService->updateProduct($request, $id);
-            return new ProductResource($product);
+            return response()->json(['message' => 'تم تحديث المنتج بنجاح', 'data' => new ProductResource($product)], 200);
         } catch (ValidationException $e) {
             return response()->json(['errors' => $e->errors()], 422);
         } catch (\Exception $e) {

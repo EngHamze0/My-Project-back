@@ -133,10 +133,35 @@ class ProductService
                 'status' => $request->status ?? $product->status,
             ]);
             
-            // إذا كان هناك صور، قم بتحميلها
+            // حذف الصور المحددة إذا وجدت
+            if ($request->has('images_to_delete') && is_array($request->images_to_delete)) {
+                foreach ($request->images_to_delete as $imageId) {
+                    $image = $product->images()->find($imageId);
+                    if ($image) {
+                        // حذف الملف الفعلي من التخزين
+                        if (\Storage::disk('public')->exists($image->image_path)) {
+                            \Storage::disk('public')->delete($image->image_path);
+                        }
+                        // حذف السجل من قاعدة البيانات
+                        $image->delete();
+                    }
+                }
+                
+                // إذا تم حذف الصورة الرئيسية، قم بتعيين صورة أخرى كصورة رئيسية
+                if (!$product->images()->where('is_primary', true)->exists() && $product->images()->count() > 0) {
+                    $product->images()->first()->update(['is_primary' => true]);
+                }
+            }
+            
+            // إذا كان هناك صور جديدة، قم بتحميلها
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
                 $primaryImageIndex = $request->input('primary_image_index', 0);
+                
+                // إذا كان هناك صورة محددة كرئيسية، قم بإلغاء تعيين الصور الرئيسية الأخرى
+                if ($request->has('primary_image_index')) {
+                    $product->images()->where('is_primary', true)->update(['is_primary' => false]);
+                }
                 
                 foreach ($images as $index => $image) {
                     // تخزين الصورة
@@ -144,11 +169,6 @@ class ProductService
                     
                     // تحديد ما إذا كانت هذه الصورة الرئيسية
                     $isPrimary = ($index == $primaryImageIndex);
-                    
-                    // إذا كانت هذه الصورة الرئيسية، قم بإلغاء تعيين الصور الرئيسية الأخرى
-                    if ($isPrimary) {
-                        $product->images()->where('is_primary', true)->update(['is_primary' => false]);
-                    }
                     
                     // إنشاء سجل الصورة
                     $product->images()->create([
@@ -198,62 +218,5 @@ class ProductService
         
         return $product;
     }
-    
-    /**
-     * Validate specifications based on product type
-     */
-    private function validateSpecifications(Request $request)
-    {
-        $type = $request->type;
-        $specifications = $request->specifications ?? [];
-        
-        switch ($type) {
-            case 'battery':
-                $validator = Validator::make(['specifications' => $specifications], [
-                    'specifications.capacity' => 'required|numeric|min:0',
-                    'specifications.voltage' => 'required|numeric|min:0',
-                    'specifications.chemistry' => 'required|string',
-                    'specifications.cycle_life' => 'nullable|numeric|min:0',
-                    'specifications.dimensions' => 'nullable|string',
-                    'specifications.weight' => 'nullable|numeric|min:0',
-                    'specifications.brand' => 'nullable|string',
-                ]);
-                break;
-                
-            case 'solar_panel':
-                $validator = Validator::make(['specifications' => $specifications], [
-                    'specifications.power' => 'required|numeric|min:0',
-                    'specifications.voltage' => 'required|numeric|min:0',
-                    'specifications.current' => 'required|numeric|min:0',
-                    'specifications.dimensions' => 'nullable|string',
-                    'specifications.weight' => 'nullable|numeric|min:0',
-                    'specifications.cell_type' => 'nullable|string',
-                    'specifications.efficiency' => 'nullable|numeric|min:0|max:100',
-                    'specifications.brand' => 'nullable|string',
-                ]);
-                break;
-                
-            case 'inverter':
-                $validator = Validator::make(['specifications' => $specifications], [
-                    'specifications.power' => 'required|numeric|min:0',
-                    'specifications.input_voltage' => 'required|numeric|min:0',
-                    'specifications.output_voltage' => 'required|numeric|min:0',
-                    'specifications.efficiency' => 'nullable|numeric|min:0|max:100',
-                    'specifications.dimensions' => 'nullable|string',
-                    'specifications.weight' => 'nullable|numeric|min:0',
-                    'specifications.type' => 'nullable|string',
-                    'specifications.brand' => 'nullable|string',
-                ]);
-                break;
-                
-            default:
-                throw ValidationException::withMessages([
-                    'type' => ['نوع المنتج غير صالح'],
-                ]);
-        }
-        
-        if ($validator && $validator->fails()) {
-            throw ValidationException::withMessages($validator->errors()->toArray());
-        }
-    }
+  
 } 
