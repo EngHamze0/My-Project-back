@@ -66,4 +66,21 @@ class User extends Authenticatable
             ->withPivot('start_date', 'end_date', 'amount_paid', 'status', 'notes')
             ->withTimestamps();
     }
+
+    /**
+     * العلاقة مع المنتجات المفضلة للمستخدم
+     */
+    public function favorites()
+    {
+        return $this->hasMany(Favorite::class);
+    }
+
+    /**
+     * المنتجات المفضلة للمستخدم
+     */
+    public function favoriteProducts()
+    {
+        return $this->belongsToMany(Product::class, 'favorites')
+            ->withTimestamps();
+    }
 }

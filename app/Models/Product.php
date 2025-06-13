@@ -40,6 +40,30 @@ class Product extends Model
         return $this->hasOne(ProductImage::class)->where('is_primary', true);
     }
 
+    /**
+     * العلاقة مع المفضلات
+     */
+    public function favorites()
+    {
+        return $this->hasMany(Favorite::class);
+    }
+
+    /**
+     * التحقق مما إذا كان المنتج مفضلاً لدى مستخدم معين
+     */
+    public function isFavorite($userId = null)
+    {
+        if (!$userId && auth()->check()) {
+            $userId = auth()->id();
+        }
+        
+        if (!$userId) {
+            return false;
+        }
+        
+        return $this->favorites()->where('user_id', $userId)->exists();
+    }
+
     // Scope to filter by product type
     public function scopeOfType($query, $type)
     {

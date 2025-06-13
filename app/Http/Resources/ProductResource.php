@@ -25,6 +25,7 @@ class ProductResource extends JsonResource
             'specifications' => $this->specifications,
             'status' => $this->status,
             'status_label' => $this->status === 'active' ? 'نشط' : 'غير نشط',
+            'is_favorite' => $this->when(isset($this->is_favorite), $this->is_favorite),
             'primary_image' => $this->whenLoaded('primaryImage', function () {
                 return $this->primaryImage ? new ProductImageResource($this->primaryImage) : null;
             }),

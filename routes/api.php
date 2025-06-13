@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Middleware\CheckAdminRole;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
@@ -48,6 +49,13 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // اشتراك المستخدم في خدمة
     Route::post('/subscribe', [SubscriptionController::class, 'subscribe']);
+    
+    // مسارات المفضلات
+    Route::get('/favorites', [FavoriteController::class, 'index']);
+    Route::post('/favorites', [FavoriteController::class, 'store']); // we don't used
+    Route::delete('/favorites/{productId}', [FavoriteController::class, 'destroy']);// we don't used
+    Route::post('/favorites/toggle/{productId}', [FavoriteController::class, 'toggle']);
+    Route::get('/favorites/check/{productId}', [FavoriteController::class, 'check']);// we don't used
 });
 
 // مسارات المنتجات للمشرفين

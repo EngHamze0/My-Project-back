@@ -48,7 +48,18 @@ class ProductService
         // Sort products
         $query->orderBy($request->get('sort_by', 'created_at'), $request->get('sort_direction', 'desc'));
         
-        return $query->paginate($request->get('per_page', 15));
+        $products = $query->paginate($request->get('per_page', 15));
+        
+        // إضافة معلومات المفضلة إذا كان المستخدم مسجل الدخول
+        if (auth()->check()) {
+            $userId = auth()->id();
+            $products->getCollection()->transform(function ($product) use ($userId) {
+                $product->is_favorite = $product->isFavorite($userId);
+                return $product;
+            });
+        }
+        
+        return $products;
     }
     
     /**
@@ -63,6 +74,12 @@ class ProductService
         }
         
         $product = $query->findOrFail($id);
+        
+        // إضافة معلومات المفضلة إذا كان المستخدم مسجل الدخول
+        if (auth()->check()) {
+            $product->is_favorite = $product->isFavorite(auth()->id());
+        }
+        
         return $product;
     }
     
