@@ -49,6 +49,21 @@ class User extends Authenticatable
         ];
     }
 
-   
+    /**
+     * Get the subscriptions for the user.
+     */
+    public function subscriptions()
+    {
+        return $this->hasMany(Subscription::class);
+    }
 
+    /**
+     * Get the services that the user is subscribed to.
+     */
+    public function services()
+    {
+        return $this->belongsToMany(Service::class, 'subscriptions')
+            ->withPivot('start_date', 'end_date', 'amount_paid', 'status', 'notes')
+            ->withTimestamps();
+    }
 }

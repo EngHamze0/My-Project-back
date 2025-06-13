@@ -5,7 +5,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AdminUserApiController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProductController;
-use App\Http\Controllers\Api\ProductImageController;
+// use App\Http\Controllers\Api\ProductImageController;
+use App\Http\Controllers\Api\ServiceController;
+use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Middleware\CheckAdminRole;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
@@ -24,13 +26,13 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 Route::post('/send-otp', [AuthController::class, 'sendOtp']);
 Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 
-
-
 // مسارات المنتجات للمستخدمين العاديين (قراءة فقط)
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{id}', [ProductController::class, 'show']);
 
-
+// مسارات الخدمات للجميع (قراءة فقط)
+Route::get('/services', [ServiceController::class, 'index']);
+Route::get('/services/{id}', [ServiceController::class, 'show']);
 
 // مسارات تتطلب المصادقة
 Route::middleware('auth:sanctum')->group(function () {
@@ -38,9 +40,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::post('/change-password', [AuthController::class, 'changePassword']);
     
+    // مسارات اشتراكات المستخدم الحالي
+    Route::get('/my-subscriptions', [SubscriptionController::class, 'mySubscriptions']);
+    Route::get('/subscriptions/{id}', [SubscriptionController::class, 'show']);
+    Route::get('/subscriptions/{id}/cancel', [SubscriptionController::class, 'cancel']);
     
-    // مسارات صور المنتجات للمستخدمين العاديين (قراءة فقط)
-    Route::get('/products/{productId}/images', [ProductImageController::class, 'index']);
+    // اشتراك المستخدم في خدمة
+    Route::post('/subscribe', [SubscriptionController::class, 'subscribe']);
 });
 
 // مسارات المنتجات للمشرفين
@@ -56,14 +62,29 @@ Route::middleware(['auth:sanctum', CheckAdminRole::class])->group(function () {
     Route::delete('/products/{id}', [ProductController::class, 'destroy']);
     Route::get('/products/toggle-status/{id}', [ProductController::class, 'toggleStatus']);
     
-    // مسارات صور المنتجات
-    Route::post('/products/{productId}/images', [ProductImageController::class, 'store']);
-    Route::post('/products/{productId}/images/multiple', [ProductImageController::class, 'storeMultiple']);
-    Route::post('/products/{productId}/images/order', [ProductImageController::class, 'updateOrder']);
-    Route::get('/products/{productId}/images/{imageId}/set-primary', [ProductImageController::class, 'setPrimary']);
-    Route::delete('/products/{productId}/images/{imageId}', [ProductImageController::class, 'destroy']);
+    // مسارات الخدمات (إنشاء، تعديل، حذف)
+    Route::post('/services', [ServiceController::class, 'store']);
+    Route::post('/services/{id}', [ServiceController::class, 'update']);
+    Route::delete('/services/{id}', [ServiceController::class, 'destroy']);
+    Route::get('/services/toggle-status/{id}', [ServiceController::class, 'toggleStatus']);
+    Route::get('/services/{id}/subscribers', [ServiceController::class, 'subscribers']);
+    
+    // مسارات الاشتراكات (للمشرفين)
+    Route::get('/subscriptions', [SubscriptionController::class, 'index']);
+    Route::post('/subscriptions', [SubscriptionController::class, 'store']);
+    Route::post('/subscriptions/{id}', [SubscriptionController::class, 'update']);
+    Route::post('/subscriptions/{id}/rwene', [SubscriptionController::class, 'renew']);
 });
 
+// // مسارات صور المنتجات
+// Route::post('/products/{productId}/images', [ProductImageController::class, 'store']);
+// Route::post('/products/{productId}/images/multiple', [ProductImageController::class, 'storeMultiple']);
+// Route::post('/products/{productId}/images/order', [ProductImageController::class, 'updateOrder']);
+// Route::get('/products/{productId}/images/{imageId}/set-primary', [ProductImageController::class, 'setPrimary']);
+// Route::delete('/products/{productId}/images/{imageId}', [ProductImageController::class, 'destroy']);
+// مسارات صور المنتجات للمستخدمين العاديين (قراءة فقط)
+// Route::get('/products/{productId}/images', [ProductImageController::class, 'index']);
+ 
 
 
 
