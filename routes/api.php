@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ProductController;
 // use App\Http\Controllers\Api\ProductImageController;
 use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\SubscriptionController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Middleware\CheckAdminRole;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
@@ -73,7 +74,13 @@ Route::middleware(['auth:sanctum', CheckAdminRole::class])->group(function () {
     Route::get('/subscriptions', [SubscriptionController::class, 'index']);
     Route::post('/subscriptions', [SubscriptionController::class, 'store']);
     Route::post('/subscriptions/{id}', [SubscriptionController::class, 'update']);
-    Route::post('/subscriptions/{id}/rwene', [SubscriptionController::class, 'renew']);
+    Route::post('/subscriptions/{id}/renew', [SubscriptionController::class, 'renew']);
+    
+    // مسارات لوحة التحكم
+    Route::get('/dashboard', [DashboardController::class, 'index']);
+    Route::get('/dashboard/users', [DashboardController::class, 'usersStats']);
+    Route::get('/dashboard/services', [DashboardController::class, 'servicesStats']);
+    Route::get('/dashboard/subscriptions', [DashboardController::class, 'subscriptionsStats']);
 });
 
 // // مسارات صور المنتجات
