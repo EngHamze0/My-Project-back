@@ -51,8 +51,8 @@ class ProductService
         $products = $query->paginate($request->get('per_page', 15));
         
         // إضافة معلومات المفضلة إذا كان المستخدم مسجل الدخول
-        if (auth()->check()) {
-            $userId = auth()->id();
+        if (auth('sanctum')->user()) {
+            $userId = auth('sanctum')->user()->id;
             $products->getCollection()->transform(function ($product) use ($userId) {
                 $product->is_favorite = $product->isFavorite($userId);
                 return $product;
@@ -76,8 +76,8 @@ class ProductService
         $product = $query->findOrFail($id);
         
         // إضافة معلومات المفضلة إذا كان المستخدم مسجل الدخول
-        if (auth()->check()) {
-            $product->is_favorite = $product->isFavorite(auth()->id());
+        if (auth('sanctum')->user()) {
+            $product->is_favorite = $product->isFavorite(auth('sanctum')->user()->id);
         }
         
         return $product;
