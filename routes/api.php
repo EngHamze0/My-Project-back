@@ -24,15 +24,20 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 Route::post('/send-otp', [AuthController::class, 'sendOtp']);
 Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 
+
+
+// مسارات المنتجات للمستخدمين العاديين (قراءة فقط)
+Route::get('/products', [ProductController::class, 'index']);
+Route::get('/products/{id}', [ProductController::class, 'show']);
+
+
+
 // مسارات تتطلب المصادقة
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
     Route::post('/change-password', [AuthController::class, 'changePassword']);
     
-    // مسارات المنتجات للمستخدمين العاديين (قراءة فقط)
-    Route::get('/products', [ProductController::class, 'index']);
-    Route::get('/products/{id}', [ProductController::class, 'show']);
     
     // مسارات صور المنتجات للمستخدمين العاديين (قراءة فقط)
     Route::get('/products/{productId}/images', [ProductImageController::class, 'index']);
