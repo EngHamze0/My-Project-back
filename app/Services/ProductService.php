@@ -104,7 +104,7 @@ class ProductService
                     ]);
                 }
             }
-            
+            $product->save();
             DB::commit();
             return $product->load('images');
         } catch (\Exception $e) {

@@ -9,7 +9,7 @@ use App\Http\Resources\ProductResource;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
-
+use Illuminate\Support\Facades\Validator;
 class ProductController extends Controller
 {
     protected $productService;
@@ -35,11 +35,25 @@ class ProductController extends Controller
     /**
      * Store a newly created product in storage.
      */
-    public function store(ProductRequest $request)
+    public function store(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric|min:0',
+            'quantity' => 'required|integer|min:0',
+            'type' => 'required',
+            'status' => 'nullable',
+            'images' => 'nullable|array',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10000',
+            'primary_image_index' => 'nullable|integer|min:0',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
         try {
             $product = $this->productService->createProduct($request);
-            return new ProductResource($product);
+            return response()->json( ['message' => 'Product created successfully', 'data' => new ProductResource($product)], status: 201);
         } catch (ValidationException $e) {
             return response()->json(['errors' => $e->errors()], 422);
         } catch (\Exception $e) {

@@ -28,7 +28,7 @@ class ProductRequest extends FormRequest
             'type' => ['required', Rule::in(['battery', 'solar_panel', 'inverter'])],
             'status' => ['nullable', Rule::in(['active', 'inactive'])],
             'images' => 'nullable|array',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10000',
             'primary_image_index' => 'nullable|integer|min:0',
         ];
         
@@ -89,16 +89,14 @@ class ProductRequest extends FormRequest
             
             // Battery specifications
             'specifications.capacity.required' => 'سعة البطارية مطلوبة',
-            'specifications.voltage.required' => 'جهد البطارية مطلوب',
             'specifications.chemistry.required' => 'نوع كيمياء البطارية مطلوب',
             
             // Solar panel specifications
-            'specifications.power.required' => 'قدرة اللوح الشمسي مطلوبة',
-            'specifications.voltage.required' => 'جهد اللوح الشمسي مطلوب',
+            'specifications.voltage.required' => 'جهد  مطلوب',
             'specifications.current.required' => 'تيار اللوح الشمسي مطلوب',
             
             // Inverter specifications
-            'specifications.power.required' => 'قدرة المحول مطلوبة',
+            'specifications.power.required' => 'قدرة  مطلوبة',
             'specifications.input_voltage.required' => 'جهد الدخل للمحول مطلوب',
             'specifications.output_voltage.required' => 'جهد الخرج للمحول مطلوب',
         ];
