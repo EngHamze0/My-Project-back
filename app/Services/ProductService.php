@@ -110,6 +110,9 @@ class ProductService
                     // تخزين الصورة
                     $path = $image->store('products', 'public');
                     
+                    // طباعة مسار الصورة للتأكد من تخزينها بشكل صحيح
+                    \Log::info('تم تحميل الصورة: ' . $path);
+                    
                     // تحديد ما إذا كانت هذه الصورة الرئيسية
                     $isPrimary = ($index == $primaryImageIndex);
                     
@@ -148,6 +151,7 @@ class ProductService
                 'type' => $request->type ?? $product->type,
                 'specifications' => $request->specifications ?? $product->specifications,
                 'status' => $request->status ?? $product->status,
+                'primary_image' => $request->primary_image_index ?? $product->primary_image,
             ]);
             
             // حذف الصور المحددة إذا وجدت
