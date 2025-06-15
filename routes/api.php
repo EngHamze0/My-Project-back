@@ -94,6 +94,7 @@ Route::middleware(['auth:sanctum', CheckAdminRole::class])->group(function () {
     Route::get('/dashboard/users', [DashboardController::class, 'usersStats']);
     Route::get('/dashboard/services', [DashboardController::class, 'servicesStats']);
     Route::get('/dashboard/subscriptions', [DashboardController::class, 'subscriptionsStats']);
+    Route::get('/dashboard/orders', [DashboardController::class, 'ordersStats']);
 
     // مسارات الكوبونات للمشرفين
     Route::apiResource('/coupons', CouponController::class);

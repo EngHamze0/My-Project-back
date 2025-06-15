@@ -7,6 +7,7 @@ use App\Models\Service;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\Product;
+use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -46,13 +47,33 @@ class DashboardController extends Controller
         // إحصائيات المنتجات (إذا كانت موجودة)
         $productsCount = class_exists('App\Models\Product') ? Product::count() : 0;
 
+        // إحصائيات الطلبات
+        $ordersCount = Order::count();
+        $pendingOrdersCount = Order::where('status', 'pending')->count();
+        $completedOrdersCount = Order::where('status', 'completed')->count();
+
         // إجمالي الإيرادات من الاشتراكات
         $totalRevenue = Subscription::sum('amount_paid');
+        
+        // إجمالي الإيرادات من الطلبات
+        $totalOrdersRevenue = Order::where('payment_status', 'paid')->sum('total');
+        
+        // إجمالي الإيرادات الكلية
+        $totalAllRevenue = $totalRevenue + $totalOrdersRevenue;
         
         // إيرادات الشهر الحالي
         $currentMonthRevenue = Subscription::whereMonth('created_at', Carbon::now()->month)
             ->whereYear('created_at', Carbon::now()->year)
             ->sum('amount_paid');
+            
+        // إيرادات الشهر الحالي من الطلبات
+        $currentMonthOrdersRevenue = Order::whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('created_at', Carbon::now()->year)
+            ->where('payment_status', 'paid')
+            ->sum('total');
+            
+        // إجمالي إيرادات الشهر الحالي
+        $currentMonthAllRevenue = $currentMonthRevenue + $currentMonthOrdersRevenue;
 
         // الخدمات الأكثر اشتراكاً
         $topServices = Service::withCount('subscriptions')
@@ -91,9 +112,16 @@ class DashboardController extends Controller
                 'products' => [
                     'total' => $productsCount
                 ],
+                'orders' => [
+                    'total' => $ordersCount,
+                    'pending' => $pendingOrdersCount,
+                    'completed' => $completedOrdersCount
+                ],
                 'revenue' => [
-                    'total' => $totalRevenue,
-                    'current_month' => $currentMonthRevenue
+                    'total' => $totalAllRevenue,
+                    'subscriptions' => $totalRevenue,
+                    'orders' => $totalOrdersRevenue,
+                    'current_month' => $currentMonthAllRevenue
                 ],
                 'top_services' => $topServices,
                 'subscription_trends' => $last6MonthsStats
@@ -321,6 +349,150 @@ class DashboardController extends Controller
             $revenue = Subscription::whereMonth('created_at', $month)
                 ->whereYear('created_at', $currentYear)
                 ->sum('amount_paid');
+
+            $stats[] = [
+                'month' => $monthName,
+                'count' => $count,
+                'revenue' => $revenue
+            ];
+        }
+
+        return $stats;
+    }
+
+    /**
+     * عرض إحصائيات الطلبات.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function ordersStats()
+    {
+        // التحقق من صلاحيات المستخدم
+        if (auth()->user()->role !== 'admin') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'غير مصرح لك بالوصول إلى لوحة التحكم'
+            ], 403);
+        }
+
+        // إحصائيات الطلبات
+        $ordersCount = Order::count();
+        
+        // إحصائيات حسب الحالة
+        $pendingOrdersCount = Order::where('status', 'pending')->count();
+        $processingOrdersCount = Order::where('status', 'processing')->count();
+        $completedOrdersCount = Order::where('status', 'completed')->count();
+        $cancelledOrdersCount = Order::where('status', 'cancelled')->count();
+        $refundedOrdersCount = Order::where('status', 'refunded')->count();
+        
+        // إحصائيات حسب حالة الدفع
+        $paidOrdersCount = Order::where('payment_status', 'paid')->count();
+        $pendingPaymentCount = Order::where('payment_status', 'pending')->count();
+        $failedPaymentCount = Order::where('payment_status', 'failed')->count();
+        
+        // إجمالي الإيرادات من الطلبات
+        $totalRevenue = Order::where('payment_status', 'paid')->sum('total');
+        
+        // إيرادات الشهر الحالي
+        $currentMonthRevenue = Order::whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('created_at', Carbon::now()->year)
+            ->where('payment_status', 'paid')
+            ->sum('total');
+            
+        // إيرادات السنة الحالية
+        $currentYearRevenue = Order::whereYear('created_at', Carbon::now()->year)
+            ->where('payment_status', 'paid')
+            ->sum('total');
+            
+        // متوسط قيمة الطلب
+        $averageOrderValue = Order::where('payment_status', 'paid')->avg('total') ?? 0;
+        
+        // الطلبات الجديدة اليوم
+        $newOrdersToday = Order::whereDate('created_at', Carbon::today())->count();
+        
+        // الطلبات الجديدة هذا الأسبوع
+        $newOrdersThisWeek = Order::whereBetween('created_at', [
+            Carbon::now()->startOfWeek(),
+            Carbon::now()->endOfWeek()
+        ])->count();
+        
+        // الطلبات الجديدة هذا الشهر
+        $newOrdersThisMonth = Order::whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('created_at', Carbon::now()->year)
+            ->count();
+            
+        // إحصائيات الطلبات الشهرية للسنة الحالية
+        $monthlyStats = $this->getMonthlyOrderStats();
+        
+        // أكثر المستخدمين طلباً
+        $topCustomers = User::withCount('orders')
+            ->orderBy('orders_count', 'desc')
+            ->take(10)
+            ->get(['id', 'name', 'email', 'phone']);
+            
+        // طرق الدفع الأكثر استخداماً
+        $paymentMethods = Order::where('payment_status', 'paid')
+            ->select('payment_method', DB::raw('count(*) as count'), DB::raw('sum(total) as total_amount'))
+            ->groupBy('payment_method')
+            ->orderBy('count', 'desc')
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'total' => $ordersCount,
+                'by_status' => [
+                    'pending' => $pendingOrdersCount,
+                    'processing' => $processingOrdersCount,
+                    'completed' => $completedOrdersCount,
+                    'cancelled' => $cancelledOrdersCount,
+                    'refunded' => $refundedOrdersCount
+                ],
+                'by_payment_status' => [
+                    'paid' => $paidOrdersCount,
+                    'pending' => $pendingPaymentCount,
+                    'failed' => $failedPaymentCount
+                ],
+                'revenue' => [
+                    'total' => $totalRevenue,
+                    'current_month' => $currentMonthRevenue,
+                    'current_year' => $currentYearRevenue,
+                    'average_order_value' => $averageOrderValue
+                ],
+                'new_orders' => [
+                    'today' => $newOrdersToday,
+                    'this_week' => $newOrdersThisWeek,
+                    'this_month' => $newOrdersThisMonth
+                ],
+                'monthly_stats' => $monthlyStats,
+                'top_customers' => $topCustomers,
+                'payment_methods' => $paymentMethods
+            ]
+        ]);
+    }
+
+    /**
+     * الحصول على إحصائيات الطلبات الشهرية للسنة الحالية.
+     *
+     * @return array
+     */
+    private function getMonthlyOrderStats()
+    {
+        $stats = [];
+        $currentYear = Carbon::now()->year;
+
+        for ($month = 1; $month <= 12; $month++) {
+            $date = Carbon::createFromDate($currentYear, $month, 1);
+            $monthName = $date->translatedFormat('F'); // اسم الشهر بالعربية إذا كانت اللغة معدة للعربية
+
+            $count = Order::whereMonth('created_at', $month)
+                ->whereYear('created_at', $currentYear)
+                ->count();
+
+            $revenue = Order::whereMonth('created_at', $month)
+                ->whereYear('created_at', $currentYear)
+                ->where('payment_status', 'paid')
+                ->sum('total');
 
             $stats[] = [
                 'month' => $monthName,
