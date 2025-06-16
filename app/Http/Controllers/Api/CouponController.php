@@ -10,12 +10,7 @@ use Exception;
 
 class CouponController extends Controller
 {
-    // public function __construct()
-    // {
-    //     $this->middleware('auth:sanctum');
-    //     // استخدام CheckAdminRole للتحقق من صلاحيات المشرف
-    //     $this->middleware('CheckAdminRole')->except(['validateCoupon']);
-    // }
+   
 
     /**
      * عرض قائمة الكوبونات

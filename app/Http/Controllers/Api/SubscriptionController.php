@@ -210,12 +210,12 @@ class SubscriptionController extends Controller
     public function renew(Request $request, $id)
     {
         // فقط المشرف يمكنه تجديد الاشتراكات
-        if (Auth::user()->role !== 'admin') {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'غير مصرح لك بتجديد الاشتراكات'
-            ], 403);
-        }
+        // if (Auth::user()->role !== 'admin') {
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'غير مصرح لك بتجديد الاشتراكات'
+        //     ], 403);
+        // }
 
         $subscription = Subscription::with('service')->findOrFail($id);
         

@@ -49,7 +49,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/my-subscriptions', [SubscriptionController::class, 'mySubscriptions']);
     Route::get('/subscriptions/{id}', [SubscriptionController::class, 'show']);
     Route::get('/subscriptions/{id}/cancel', [SubscriptionController::class, 'cancel']);
-    
+    Route::post('/subscriptions/{id}/renew', [SubscriptionController::class, 'renew']);
+    Route::post('/subscriptions', [SubscriptionController::class, 'store']);
+
     // اشتراك المستخدم في خدمة
     Route::post('/subscribe', [SubscriptionController::class, 'subscribe']);
     
@@ -62,6 +64,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // مسارات الكوبونات للمستخدمين
     Route::post('/coupons/validate', [App\Http\Controllers\API\CouponController::class, 'validateCoupon']);
+
 });
 
 // مسارات المنتجات للمشرفين
@@ -86,9 +89,7 @@ Route::middleware(['auth:sanctum', CheckAdminRole::class])->group(function () {
     
     // مسارات الاشتراكات (للمشرفين)
     Route::get('/subscriptions', [SubscriptionController::class, 'index']);
-    Route::post('/subscriptions', [SubscriptionController::class, 'store']);
     Route::post('/subscriptions/{id}', [SubscriptionController::class, 'update']);
-    Route::post('/subscriptions/{id}/renew', [SubscriptionController::class, 'renew']);
     
     // مسارات لوحة التحكم
     Route::get('/dashboard', [DashboardController::class, 'index']);
