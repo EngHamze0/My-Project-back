@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductRequest;
 use App\Http\Resources\ProductCollection;
 use App\Http\Resources\ProductResource;
+use App\Models\Product;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -28,6 +29,16 @@ class ProductController extends Controller
         try {
             $products = $this->productService->getAllProducts($request);
             return new ProductCollection($products);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function allproducts(Request $request)
+    {
+        try {
+            $products = Product::with('primaryImage')->get();
+            return response()->json($products);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }

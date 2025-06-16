@@ -32,6 +32,7 @@ Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 
 // مسارات المنتجات للمستخدمين العاديين (قراءة فقط)
 Route::get('/products', [ProductController::class, 'index']);
+Route::get('/allproducts', [ProductController::class, 'allproducts']);
 Route::get('/products/{id}', [ProductController::class, 'show']);
 
 // مسارات الخدمات للجميع (قراءة فقط)
